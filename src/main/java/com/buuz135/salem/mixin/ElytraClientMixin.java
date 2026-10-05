@@ -17,7 +17,7 @@ public class ElytraClientMixin {
             method = "aiStep",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/item/ItemStack;canElytraFly(Lnet/minecraft/world/entity/LivingEntity;)Z",
+                    target = "Lnet/minecraft/client/player/LocalPlayer;tryToStartFallFlying()Z",
                     remap = false
             )
     )

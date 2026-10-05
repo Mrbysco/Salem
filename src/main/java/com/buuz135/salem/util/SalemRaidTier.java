@@ -5,10 +5,12 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.animal.Cat;
+import net.minecraft.world.entity.animal.feline.*;
 import net.minecraft.world.entity.monster.*;
 import net.minecraft.world.entity.monster.breeze.Breeze;
 import net.minecraft.world.entity.monster.piglin.PiglinBrute;
+import net.minecraft.world.entity.monster.skeleton.*;
+import net.minecraft.world.entity.monster.zombie.*;
 import net.minecraft.world.level.Level;
 
 import java.util.function.Function;
@@ -16,24 +18,24 @@ import java.util.function.Function;
 public enum SalemRaidTier{
 
     COMMON(level -> {
-        if (level.random.nextBoolean()){
+        if (level.getRandom().nextBoolean()){
             return new Zombie(level);
         } else {
             return new Skeleton(EntityType.SKELETON, level);
         }
     }, new TagKey[]{SalemTags.RAID_ADD_COMMON}, 2),
     RARE(level -> {
-        if (level.random.nextDouble() > 2/3D){
+        if (level.getRandom().nextDouble() > 2/3D){
             return new PiglinBrute(EntityType.PIGLIN_BRUTE, level);
-        } else if (level.random.nextDouble() > 1/3D){
+        } else if (level.getRandom().nextDouble() > 1/3D){
             return new Stray(EntityType.STRAY, level);
         }
         return new Husk(EntityType.HUSK, level);
     }, new TagKey[]{ SalemTags.RAID_ADD_RARE,SalemTags.RAID_ADD_COMMON}, 3),
     EPIC(level -> {
-        if (level.random.nextDouble() > 2/3D){
+        if (level.getRandom().nextDouble() > 2/3D){
             return new Ravager(EntityType.RAVAGER, level);
-        } else if (level.random.nextDouble() > 1/3D){
+        } else if (level.getRandom().nextDouble() > 1/3D){
             return new WitherSkeleton(EntityType.WITHER_SKELETON, level);
         }
         return new Breeze(EntityType.BREEZE, level);
@@ -53,10 +55,10 @@ public enum SalemRaidTier{
     }
 
     public EntityType<?> getRandomSpawn(Level level){
-        if (level.random.nextBoolean() || this.spawns.length == 1){
-            return level.registryAccess().registryOrThrow(Registries.ENTITY_TYPE).getRandomElementOf(this.spawns[0], level.random).get().value();
+        if (level.getRandom().nextBoolean() || this.spawns.length == 1){
+            return level.registryAccess().lookupOrThrow(Registries.ENTITY_TYPE).getRandomElementOf(this.spawns[0], level.getRandom()).get().value();
         }
-        return level.registryAccess().registryOrThrow(Registries.ENTITY_TYPE).getRandomElementOf(this.spawns[level.random.nextInt(this.spawns.length)], level.random).get().value();
+        return level.registryAccess().lookupOrThrow(Registries.ENTITY_TYPE).getRandomElementOf(this.spawns[level.getRandom().nextInt(this.spawns.length)], level.getRandom()).get().value();
     }
 
     public Function<ServerLevel, Mob> getBossSupplier() {

@@ -6,38 +6,39 @@ import com.buuz135.salem.util.SalemRaidTier;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.Level;
 
-import java.util.List;
+import java.util.function.Consumer;
 
 public class UnhallowedCrossItem extends TrinketItem{
 
-    public UnhallowedCrossItem() {
-        super(Rarity.EPIC, SalemRaidTier.LEGENDARY);
+    public UnhallowedCrossItem(Properties properties) {
+        super(properties, Rarity.EPIC, SalemRaidTier.LEGENDARY);
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand interactionHand) {
+    public InteractionResult use(Level level, Player player, InteractionHand interactionHand) {
         ItemStack held = player.getItemInHand(interactionHand);
         ItemStack totem = InventoryFinderUtil.findFirst(player, Items.TOTEM_OF_UNDYING);
         if (!totem.isEmpty() && !held.isEmpty() && getAmount(held) < 5){
             totem.shrink(1);
             setAmount(held, getAmount(held) + 1);
-            return InteractionResultHolder.success(held);
+            return InteractionResult.SUCCESS;
         }
         return super.use(level, player, interactionHand);
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
-        super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
-        tooltipComponents.add(Component.literal("Stored Totems: ").withStyle(ChatFormatting.GOLD).append(Component.literal("" +  getAmount(stack)).withStyle(ChatFormatting.WHITE)));
+    public void appendHoverText(ItemStack itemStack, TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag tooltipFlag) {
+        super.appendHoverText(itemStack, context, display, builder, tooltipFlag);
+        builder.accept(Component.literal("Stored Totems: ").withStyle(ChatFormatting.GOLD).append(Component.literal("" +  getAmount(itemStack)).withStyle(ChatFormatting.WHITE)));
     }
 
     public static int getAmount(ItemStack stack){

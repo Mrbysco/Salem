@@ -5,40 +5,33 @@ import com.buuz135.salem.SalemContent;
 import com.buuz135.salem.util.InventoryFinderUtil;
 import com.buuz135.salem.util.SalemRaidTier;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.item.Equipable;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
-import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
-@EventBusSubscriber(modid = Salem.MODID, bus = EventBusSubscriber.Bus.GAME)
-public class DeathlyChargersFeetItem extends TrinketItem implements Equipable {
+@EventBusSubscriber(modid = Salem.MODID)
+public class DeathlyChargersFeetItem extends TrinketItem {
 
-    public DeathlyChargersFeetItem() {
-        super(Rarity.RARE, SalemRaidTier.EPIC);
+    public DeathlyChargersFeetItem(Properties properties) {
+        super(properties.equippable(EquipmentSlot.FEET), Rarity.RARE, SalemRaidTier.EPIC);
     }
 
     @Override
     public ItemAttributeModifiers getDefaultAttributeModifiers(ItemStack stack) {
         var modifiers = super.getDefaultAttributeModifiers(stack);
         modifiers = modifiers.withModifierAdded(Attributes.MOVEMENT_SPEED,
-                new AttributeModifier(ResourceLocation.fromNamespaceAndPath(Salem.MODID, "deathly_chargers"), 0.1 + stack.getOrDefault(SalemContent.DataComp.TIME, 0L) * 0.1D, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
+                new AttributeModifier(Identifier.fromNamespaceAndPath(Salem.MODID, "deathly_chargers"), 0.1 + stack.getOrDefault(SalemContent.DataComp.TIME, 0L) * 0.1D, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
                 EquipmentSlotGroup.ANY);
         return modifiers;
-    }
-
-    @Override
-    public EquipmentSlot getEquipmentSlot() {
-        return EquipmentSlot.FEET;
     }
 
     @SubscribeEvent

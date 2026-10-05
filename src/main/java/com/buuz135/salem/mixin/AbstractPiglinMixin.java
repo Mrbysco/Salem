@@ -26,7 +26,7 @@ import java.util.List;
 @Mixin(PiglinAi.class)
 public class AbstractPiglinMixin {
 
-    @Inject(method = "Lnet/minecraft/world/entity/monster/piglin/PiglinAi;isWearingGold(Lnet/minecraft/world/entity/LivingEntity;)Z", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "isWearingSafeArmor(Lnet/minecraft/world/entity/LivingEntity;)Z", at = @At("HEAD"), cancellable = true)
     private static void isWearingGold(LivingEntity entity, CallbackInfoReturnable<Boolean> info) {
         if (entity instanceof Player){
             if (!InventoryFinderUtil.findFirst((Player)entity, SalemContent.HELLISH_BARGAIN_RING.get()).isEmpty()){
@@ -42,7 +42,7 @@ public class AbstractPiglinMixin {
     private static List<ItemStack> getBarterResponseItems(Piglin piglin){
         LootTable lootTable = piglin.level().getServer().reloadableRegistries().getLootTable(BuiltInLootTables.PIGLIN_BARTERING);
         List<ItemStack> list = lootTable.getRandomItems((new LootParams.Builder((ServerLevel)piglin.level())).withParameter(LootContextParams.THIS_ENTITY, piglin).create(LootContextParamSets.PIGLIN_BARTER));
-        for (Player nearbyPlayer : piglin.level().getNearbyPlayers(TargetingConditions.forNonCombat(), piglin, new AABB(piglin.blockPosition()).inflate(5))) {
+        for (Player nearbyPlayer : ((ServerLevel) piglin.level()).getNearbyPlayers(TargetingConditions.forNonCombat(), piglin, new AABB(piglin.blockPosition()).inflate(5))) {
             ItemStack stack = InventoryFinderUtil.findFirst(nearbyPlayer, SalemContent.HELLISH_BARGAIN_RING.get());
             if (!stack.isEmpty()){
                 list.addAll(lootTable.getRandomItems((new LootParams.Builder((ServerLevel)piglin.level())).withParameter(LootContextParams.THIS_ENTITY, piglin).create(LootContextParamSets.PIGLIN_BARTER)));

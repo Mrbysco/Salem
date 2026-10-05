@@ -16,7 +16,7 @@ public class InventoryFinderUtil {
     static {
         FINDERS.add(new InventoryFinderUtil((livingEntity, item) -> {
             if (livingEntity instanceof Player player){
-                for (ItemStack itemStack : player.getInventory().items) {
+                for (ItemStack itemStack : player.getInventory().getNonEquipmentItems()) {
                     if (itemStack.getItem().equals(item)){
                         return itemStack;
                     }

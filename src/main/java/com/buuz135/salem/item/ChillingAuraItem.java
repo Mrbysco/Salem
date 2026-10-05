@@ -17,12 +17,12 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 
-@EventBusSubscriber(modid = Salem.MODID, bus = EventBusSubscriber.Bus.GAME)
+@EventBusSubscriber(modid = Salem.MODID)
 
 public class ChillingAuraItem extends TrinketItem{
 
-    public ChillingAuraItem() {
-        super(Rarity.UNCOMMON, SalemRaidTier.RARE);
+    public ChillingAuraItem(Properties properties) {
+        super(properties, Rarity.UNCOMMON, SalemRaidTier.RARE);
     }
 
     @SubscribeEvent
@@ -30,7 +30,7 @@ public class ChillingAuraItem extends TrinketItem{
         if (event.getEntity() instanceof Player player && event.getSource().getEntity() instanceof LivingEntity livingEntity){
             ItemStack chillingAura = InventoryFinderUtil.findFirst(player, SalemContent.CHILLING_AURA_NECKLACE.asItem());
             if (!chillingAura.isEmpty()) {
-                livingEntity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 2));
+                livingEntity.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 40, 2));
                 if (player.level() instanceof ServerLevel serverLevel){
                     serverLevel.playSound(null, player.position().x, player.position().y, player.position().z, SoundEvents.PLAYER_HURT_FREEZE, SoundSource.PLAYERS, 1f, 1);
                 }

@@ -5,55 +5,81 @@ import com.buuz135.salem.item.TrinketItem;
 import com.buuz135.salem.util.BlockUtil;
 import com.buuz135.salem.util.SalemRaidTier;
 import com.google.common.collect.Sets;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LightningBolt;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.hoglin.Hoglin;
 import net.minecraft.world.entity.monster.piglin.AbstractPiglin;
-
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 import net.minecraft.world.scores.PlayerTeam;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class SalemRaidSavedData extends SavedData {
 
     //TODO Raid Equipment
     //TODO Config to disable natural raid spawns
 
-    private static String ID = "SalemRaids";
+    private static final Identifier ID = Identifier.fromNamespaceAndPath("salem", "salem_raids"); // swap in your MOD_ID
 
-    private final ServerLevel level;
+    public static final Codec<SalemRaidSavedData> CODEC = RecordCodecBuilder.create(inst -> inst.group(
+            Codec.unboundedMap(UUIDUtil.STRING_CODEC, SalemRaid.RaidData.CODEC)
+                    .optionalFieldOf("Raids", Map.of())
+                    .forGetter(SalemRaidSavedData::getRaidData)
+    ).apply(inst, SalemRaidSavedData::new));
+
+    private ServerLevel level;
     private HashMap<UUID, SalemRaid> raids = new HashMap<>();
 
-    public SalemRaidSavedData(ServerLevel level) {
-        this.level = level;
+    public SalemRaidSavedData() {
     }
 
-    public static SalemRaidSavedData getData(ServerLevel level){
-        return level.getDataStorage().computeIfAbsent(new Factory<SalemRaidSavedData>(() -> new SalemRaidSavedData(level), (compoundTag, provider) -> load(level, compoundTag)), ID);
+    public SalemRaidSavedData(Map<UUID, SalemRaid.RaidData> data) {
+        data.forEach((uuid, raidData) -> {
+            SalemRaid raid = new SalemRaid(raidData.uuid(), raidData.tier());
+            raid.load(raidData);
+            this.raids.put(uuid, raid);
+        });
     }
 
-    private static SalemRaidSavedData load(ServerLevel level, CompoundTag compoundTag){
-        SalemRaidSavedData salemRaidSavedData = new SalemRaidSavedData(level);
-        for (String raids : compoundTag.getCompound("Raids").getAllKeys()) {
-            SalemRaid raid = new SalemRaid(UUID.fromString(raids), SalemRaidTier.COMMON);
-            raid.load(level, compoundTag.getCompound("Raids").getCompound(raids));
-            salemRaidSavedData.raids.put(UUID.fromString(raids), raid);
-        }
-        return salemRaidSavedData;
+    private Map<UUID, SalemRaid.RaidData> getRaidData() {
+        return raids.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toData()));
+    }
+
+    public static SavedDataType<SalemRaidSavedData> type() {
+        return new SavedDataType<>(ID, SalemRaidSavedData::new, CODEC, null);
+    }
+
+    public static SalemRaidSavedData getData(ServerLevel level) {
+        SalemRaidSavedData data = level.getDataStorage().computeIfAbsent(type());
+        data.level = level;
+        return data;
     }
 
     public void startRaid(BlockPos pos, SalemRaidTier tier){
@@ -90,26 +116,25 @@ public class SalemRaidSavedData extends SavedData {
         raids.values().forEach(salemRaid -> salemRaid.tick(level,this));
     }
 
-    @Override
-    public CompoundTag save(CompoundTag compoundTag, HolderLookup.Provider provider) {
-        CompoundTag raidsCompound = new CompoundTag();
-        raids.forEach((uuid, salemRaid) -> {
-            CompoundTag tag = new CompoundTag();
-            salemRaid.save(tag);
-            raidsCompound.put(uuid.toString(), tag);
-        });
-        compoundTag.put("Raids", raidsCompound);
-        return compoundTag;
-    }
-
     private static class SalemRaid  {
 
         public static int PLEB_TIMER_MAX = 200;
+        private static final UUID RAID_ID = UUID.fromString("c6e96241-cc74-469f-a5b6-a0bb15b399cf");
         private static final Component RAID_NAME_COMPONENT = Component.translatable("event.salem.raid.spawn");
         private static final Component RAID_NAME_COMPONENT_CLEAR = Component.translatable("event.salem.raid.clear");
         private static final Component RAID_NAME_COMPONENT_ATTACK = Component.translatable("event.salem.raid.damage");
 
+        public record RaidData(UUID uuid, SalemRaidTier tier, UUID boss, List<UUID> plebs, boolean active) {
+            public static final Codec<RaidData> CODEC = RecordCodecBuilder.create(inst -> inst.group(
+                    UUIDUtil.CODEC.fieldOf("UUID").forGetter(RaidData::uuid),
+                    Codec.STRING.xmap(SalemRaidTier::valueOf, SalemRaidTier::name).fieldOf("Tier").forGetter(RaidData::tier),
+                    UUIDUtil.CODEC.fieldOf("Boss").forGetter(RaidData::boss),
+                    UUIDUtil.CODEC.listOf().optionalFieldOf("Plebs", List.of()).forGetter(RaidData::plebs),
+                    Codec.BOOL.optionalFieldOf("Active", false).forGetter(RaidData::active)
+            ).apply(inst, RaidData::new));
+        }
 
+        private RaidData originalData;
         private UUID uuid;
         private Mob boss;
         private List<LivingEntity> plebs;
@@ -118,7 +143,6 @@ public class SalemRaidSavedData extends SavedData {
         private final ServerBossEvent raidEvent;
         private boolean active;
         private int maxPlebs = 1;
-        private CompoundTag originalNBT;
         private boolean hasRemoved;
 
         public SalemRaid(UUID uuid, SalemRaidTier salemRaidTier) {
@@ -127,7 +151,7 @@ public class SalemRaidSavedData extends SavedData {
             this.plebs = new ArrayList<>();
             this.salemRaidTier = salemRaidTier;
             this.plebSpawningTimer = 100;
-            this.raidEvent = new ServerBossEvent(RAID_NAME_COMPONENT, BossEvent.BossBarColor.RED, BossEvent.BossBarOverlay.NOTCHED_10);
+            this.raidEvent = new ServerBossEvent(RAID_ID, RAID_NAME_COMPONENT, BossEvent.BossBarColor.RED, BossEvent.BossBarOverlay.NOTCHED_10);
             this.hasRemoved = false;
         }
 
@@ -141,7 +165,7 @@ public class SalemRaidSavedData extends SavedData {
             if (boss instanceof AbstractPiglin){
                 ((AbstractPiglin) boss).setImmuneToZombification(true);
             }
-            boss.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), MobSpawnType.MOB_SUMMONED, null);
+            boss.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), EntitySpawnReason.MOB_SUMMONED, null);
             PlayerTeam team =  level.getScoreboard().addPlayerTeam(boss.getStringUUID().substring(0, 15));
             level.getScoreboard().addPlayerToTeam(boss.getStringUUID(), team);
             level.addFreshEntity(boss);
@@ -150,10 +174,10 @@ public class SalemRaidSavedData extends SavedData {
 
         public void tick(ServerLevel level, SalemRaidSavedData salemRaidSavedData){
             if (this.boss == null){
-                this.boss = (Mob) level.getEntity(originalNBT.getUUID("Boss"));
+                this.boss = (Mob) level.getEntity(originalData.boss());
                 this.plebs = new ArrayList<>();
-                for (String allKey : originalNBT.getCompound("Plebs").getAllKeys()) {
-                    Entity entity = level.getEntity(UUID.fromString(allKey));
+                for (UUID plebId : originalData.plebs()) {
+                    Entity entity = level.getEntity(plebId);
                     if (entity instanceof LivingEntity){
                         plebs.add((LivingEntity) entity);
                     }
@@ -164,7 +188,7 @@ public class SalemRaidSavedData extends SavedData {
             if (this.boss.level().getGameTime() % 20 == 0){
                 updatePlayers();
                 updateProgress();
-                if (this.boss.level().isDay()){
+                if (this.boss.level().isBrightOutside()){
                     this.boss.remove(Entity.RemovalReason.DISCARDED);
                     this.hasRemoved = true;
                 }
@@ -173,7 +197,7 @@ public class SalemRaidSavedData extends SavedData {
             if (!this.boss.isAlive()){
                 if (!hasRemoved){
                     this.raidEvent.getPlayers().forEach(serverPlayer -> {
-                        ItemHandlerHelper.giveItemToPlayer(serverPlayer, new ItemStack(TrinketItem.TRINKETS.get(this.salemRaidTier).get(level.random.nextInt(TrinketItem.TRINKETS.get(this.salemRaidTier).size()))));
+                        serverPlayer.getInventory().placeItemBackInInventory(new ItemStack(TrinketItem.TRINKETS.get(this.salemRaidTier).get(level.getRandom().nextInt(TrinketItem.TRINKETS.get(this.salemRaidTier).size()))));
                     });
                 }
                 stop();
@@ -188,7 +212,7 @@ public class SalemRaidSavedData extends SavedData {
                 }
             }
             if (this.plebSpawningTimer > PLEB_TIMER_MAX){ //Spawn more plebs
-                for (int i = 0; i < 7 + boss.level().random.nextInt(7 + salemRaidTier.getTier()); i++) {
+                for (int i = 0; i < 7 + boss.level().getRandom().nextInt(7 + salemRaidTier.getTier()); i++) {
                     spawnPleb();
                 }
                 this.plebSpawningTimer = 0;
@@ -200,9 +224,9 @@ public class SalemRaidSavedData extends SavedData {
             //Check for resistance
             int resistanceAmount = getResistance();
             if (resistanceAmount == 0){
-                this.boss.removeEffect(MobEffects.DAMAGE_RESISTANCE);
+                this.boss.removeEffect(MobEffects.RESISTANCE);
             } else {
-                this.boss.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, Integer.MAX_VALUE, resistanceAmount, true, false));
+                this.boss.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, Integer.MAX_VALUE, resistanceAmount, true, false));
             }
         }
 
@@ -211,7 +235,7 @@ public class SalemRaidSavedData extends SavedData {
         }
 
         public void spawnPleb(){
-            Entity entity = this.salemRaidTier.getRandomSpawn(this.boss.level()).create(this.boss.level());
+            Entity entity = this.salemRaidTier.getRandomSpawn(this.boss.level()).create(this.boss.level(), EntitySpawnReason.MOB_SUMMONED);
             if (entity instanceof LivingEntity){
                 ((LivingEntity) entity).addEffect(new MobEffectInstance(SalemContent.Effect.SPAWN_EFFECT, Integer.MAX_VALUE, 0, true, false));
                 ((LivingEntity) entity).addEffect(new MobEffectInstance(MobEffects.HEALTH_BOOST, Integer.MAX_VALUE, 1, true, false));
@@ -222,7 +246,7 @@ public class SalemRaidSavedData extends SavedData {
 
             this.boss.level().addFreshEntity(entity);
             if (entity instanceof Mob){
-                ((Mob) entity).finalizeSpawn((ServerLevelAccessor) this.boss.level(), this.boss.level().getCurrentDifficultyAt(entity.blockPosition()), MobSpawnType.MOB_SUMMONED, null);
+                ((Mob) entity).finalizeSpawn((ServerLevelAccessor) this.boss.level(), ((ServerLevelAccessor) this.boss.level()).getCurrentDifficultyAt(entity.blockPosition()), EntitySpawnReason.MOB_SUMMONED, null);
             }
             if (entity instanceof AbstractPiglin){
                 ((AbstractPiglin) entity).setImmuneToZombification(true);
@@ -298,23 +322,19 @@ public class SalemRaidSavedData extends SavedData {
             this.raidEvent.removeAllPlayers();
         }
 
-        public void save(CompoundTag tag){
-            tag.putUUID("UUID", uuid);
-            tag.putString("Tier", salemRaidTier.name());
-            tag.putUUID("Boss", boss.getUUID());
-            CompoundTag plebs = new CompoundTag();
-            this.plebs.forEach(livingEntity -> {
-                plebs.putUUID(livingEntity.getStringUUID(), livingEntity.getUUID());
-            });
-            tag.put("Plebs", plebs);
-            tag.putBoolean("Active", this.active);
+        public RaidData toData() {
+            UUID bossId = boss != null ? boss.getUUID() : originalData.boss();
+            List<UUID> plebIds = boss != null
+                    ? plebs.stream().map(Entity::getUUID).toList()
+                    : originalData.plebs();
+            return new RaidData(uuid, salemRaidTier, bossId, plebIds, active);
         }
 
-        public void load(ServerLevel level, CompoundTag tag){
-            this.originalNBT = tag;
-            this.uuid = tag.getUUID("UUID");
-            this.salemRaidTier = SalemRaidTier.valueOf(tag.getString("Tier"));
-            this.active = tag.getBoolean("Active");
+        public void load(RaidData data) {
+            this.originalData = data;
+            this.uuid = data.uuid();
+            this.salemRaidTier = data.tier();
+            this.active = data.active();
         }
     }
 

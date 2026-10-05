@@ -13,27 +13,29 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
 import java.util.List;
+import java.util.function.Consumer;
 
-@EventBusSubscriber(modid = Salem.MODID, bus = EventBusSubscriber.Bus.GAME)
+@EventBusSubscriber(modid = Salem.MODID)
 public class BoneShieldItem extends TrinketItem{
 
-    public BoneShieldItem() {
-        super(Rarity.COMMON, SalemRaidTier.COMMON);
+    public BoneShieldItem(Properties properties) {
+        super(properties, Rarity.COMMON, SalemRaidTier.COMMON);
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
-        super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
-        if (stack.has(SalemContent.DataComp.TIME)){
-            long time = stack.getOrDefault(SalemContent.DataComp.TIME, 0L);
-            tooltipComponents.add(Component.literal("Negates Damage: ").withStyle(ChatFormatting.GOLD).append(Component.literal("" + (int) getCurrentDamageProtection(time)).withStyle(ChatFormatting.WHITE)));
-            tooltipComponents.add(Component.literal("Stored Time: ").withStyle(ChatFormatting.GOLD).append(Component.literal(format((int) (time / (60*60))) + ":" + format((int) (time % (60*60) / 60)) + ":" + format((int) (time % (60*60) % 60))).withStyle(ChatFormatting.WHITE)));
+    public void appendHoverText(ItemStack itemStack, TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag tooltipFlag) {
+        super.appendHoverText(itemStack, context, display, builder, tooltipFlag);
+        if (itemStack.has(SalemContent.DataComp.TIME)){
+            long time = itemStack.getOrDefault(SalemContent.DataComp.TIME, 0L);
+            builder.accept(Component.literal("Negates Damage: ").withStyle(ChatFormatting.GOLD).append(Component.literal("" + (int) getCurrentDamageProtection(time)).withStyle(ChatFormatting.WHITE)));
+            builder.accept(Component.literal("Stored Time: ").withStyle(ChatFormatting.GOLD).append(Component.literal(format((int) (time / (60*60))) + ":" + format((int) (time % (60*60) / 60)) + ":" + format((int) (time % (60*60) % 60))).withStyle(ChatFormatting.WHITE)));
         }
     }
 

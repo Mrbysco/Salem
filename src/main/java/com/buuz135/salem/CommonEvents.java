@@ -9,7 +9,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -40,7 +40,7 @@ public class CommonEvents {
         if (event.getLevel() instanceof ServerLevel serverLevel){
             SalemRaidSavedData.getData(serverLevel).tick();
             serverLevel.getEntities(EntityTypeTest.forClass(Mob.class), mob -> mob.hasEffect(SalemContent.Effect.SPAWN_EFFECT)).forEach(CommonEvents::salemSpawnCheck);
-            if (Config.ENABLE_RANDOM_RAIDS.get()) RAID_SPAWNER.computeIfAbsent(event.getLevel().dimension().location().toString(), s -> new SalemRaidSpawner()).tick(serverLevel);
+            if (Config.ENABLE_RANDOM_RAIDS.get()) RAID_SPAWNER.computeIfAbsent(event.getLevel().dimension().identifier().toString(), s -> new SalemRaidSpawner()).tick(serverLevel);
         }
     }
 
@@ -60,12 +60,12 @@ public class CommonEvents {
             trackedMonster.setNoAi(true);
             trackedMonster.setPos(trackedMonster.getX(), trackedMonster.getY() + 0.04, trackedMonster.getZ());
             if (trackedMonster.level() instanceof ServerLevel){
-                if (trackedMonster.level().random.nextBoolean()){
+                if (trackedMonster.level().getRandom().nextBoolean()){
                     for (int i = 0; i < 5; i++) {
                         BlockPos checkedPos = new BlockPos.MutableBlockPos(trackedMonster.getX(), trackedMonster.getY() + i, trackedMonster.getZ());
                         if (trackedMonster.level().getBlockState(checkedPos.above()).isAir()){
                             ((ServerLevel)trackedMonster.level()).sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, trackedMonster.level().getBlockState(checkedPos)), trackedMonster.getX(), trackedMonster.getBlockY() + i + 1, trackedMonster.getZ(), 10,0.1,0,0.1,0);
-                            if (trackedMonster.level().random.nextBoolean()) ((ServerLevel)trackedMonster.level()).playSound(null, trackedMonster.getX(), trackedMonster.getBlockY() + i + 1, trackedMonster.getZ(), SoundEvents.GRASS_BREAK, SoundSource.BLOCKS,0.5f , 1);
+                            if (trackedMonster.level().getRandom().nextBoolean()) ((ServerLevel)trackedMonster.level()).playSound(null, trackedMonster.getX(), trackedMonster.getBlockY() + i + 1, trackedMonster.getZ(), SoundEvents.GRASS_BREAK, SoundSource.BLOCKS,0.5f , 1);
                             break;
                         }
                     }

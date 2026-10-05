@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class TotemLivingEntityMixin {
 
     @Inject(method = "Lnet/minecraft/world/entity/LivingEntity;checkTotemDeathProtection(Lnet/minecraft/world/damagesource/DamageSource;)Z", at = @At("HEAD"), cancellable = true)
-    private  void checkTotemDeathProtection(DamageSource damageSource, CallbackInfoReturnable<Boolean> info) {
+    private void checkTotemDeathProtection(DamageSource damageSource, CallbackInfoReturnable<Boolean> info) {
         LivingEntity instance = (LivingEntity) (Object) this;
         if (instance instanceof Player){
             ItemStack unhallowedCross = InventoryFinderUtil.findFirst((Player)instance, SalemContent.UNHALLOWED_CROSS.get());

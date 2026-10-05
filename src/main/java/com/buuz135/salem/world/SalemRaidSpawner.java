@@ -22,7 +22,7 @@ public class SalemRaidSpawner {
     private int ticksUntilSpawn = 0;
 
     public void tick(ServerLevel serverLevel) {
-        var random = serverLevel.random;
+        var random = serverLevel.getRandom();
         --this.ticksUntilSpawn;
         if (ticksUntilSpawn <= 0){
             this.ticksUntilSpawn += (60 + random.nextInt(60)) * 20;

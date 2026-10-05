@@ -1,13 +1,23 @@
 package com.buuz135.salem;
 
-import com.buuz135.salem.item.*;
+import com.buuz135.salem.item.BoneShieldItem;
+import com.buuz135.salem.item.ChillingAuraItem;
+import com.buuz135.salem.item.DeathlyChargersFeetItem;
+import com.buuz135.salem.item.EternalFeastItem;
+import com.buuz135.salem.item.NightmarishWingsItem;
+import com.buuz135.salem.item.ScorchingAuraItem;
+import com.buuz135.salem.item.SummonerItem;
+import com.buuz135.salem.item.TomeOfTheDamnedItem;
+import com.buuz135.salem.item.TrinketItem;
+import com.buuz135.salem.item.UnhallowedCrossItem;
+import com.buuz135.salem.item.WitheringTouchItem;
 import com.buuz135.salem.mob_effects.SalemMobEffects;
 import com.buuz135.salem.util.SalemRaidTier;
 import com.google.common.base.Suppliers;
 import com.mojang.serialization.Codec;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -27,20 +37,20 @@ public class SalemContent {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(Salem.MODID);
 
 
-    public static DeferredItem<Item> DEATHLY_CHARGERS_FEET = ITEMS.registerItem("deathly_chargers_feet", properties -> new DeathlyChargersFeetItem());
-    public static DeferredItem<Item> BONE_SHIELD_HANDS = ITEMS.registerItem("bone_shield_hand", properties -> new BoneShieldItem());
-    public static DeferredItem<Item> CHILLING_AURA_NECKLACE = ITEMS.registerItem("chilling_aura_necklace", properties -> new ChillingAuraItem());
-    public static DeferredItem<Item> ETERNAL_FEAST_BELT = ITEMS.registerItem("eternal_feast_belt", properties -> new EternalFeastItem());
-    public static DeferredItem<Item> NIGHTMARISH_WINGS_BACK = ITEMS.registerItem("nightmarish_wings_back", properties -> new NightmarishWingsItem());
-    public static DeferredItem<Item> SCORCHING_AURA_RING = ITEMS.registerItem("scorching_aura_ring", properties -> new ScorchingAuraItem());
-    public static DeferredItem<Item> HELLISH_BARGAIN_RING = ITEMS.registerItem("hellish_bargain_ring", properties -> new TrinketItem(Rarity.UNCOMMON, SalemRaidTier.RARE));
-    public static DeferredItem<Item> TOME_OF_THE_DAMNED_CHARM = ITEMS.registerItem("tome_of_the_damned_charm", properties -> new TomeOfTheDamnedItem());
-    public static DeferredItem<Item> UNHALLOWED_CROSS = ITEMS.registerItem("unhallowed_cross_charm", properties -> new UnhallowedCrossItem());
-    public static DeferredItem<Item> WITHERING_TOUCH_HAND = ITEMS.registerItem("withering_touch_hand", properties -> new WitheringTouchItem());
-    public static DeferredItem<Item> COMMON_RAID_SUMMONER = ITEMS.registerItem("common_raid_summoner", properties -> new SummonerItem(Rarity.COMMON, SalemRaidTier.COMMON));
-    public static DeferredItem<Item> RARE_RAID_SUMMONER = ITEMS.registerItem("rare_raid_summoner", properties -> new SummonerItem(Rarity.UNCOMMON, SalemRaidTier.RARE));
-    public static DeferredItem<Item> EPIC_RAID_SUMMONER = ITEMS.registerItem("epic_raid_summoner", properties -> new SummonerItem(Rarity.RARE, SalemRaidTier.EPIC));
-    public static DeferredItem<Item> LEGENDARY_RAID_SUMMONER = ITEMS.registerItem("legendary_raid_summoner", properties -> new SummonerItem(Rarity.EPIC, SalemRaidTier.LEGENDARY));
+    public static DeferredItem<Item> DEATHLY_CHARGERS_FEET = ITEMS.registerItem("deathly_chargers_feet", DeathlyChargersFeetItem::new);
+    public static DeferredItem<Item> BONE_SHIELD_HANDS = ITEMS.registerItem("bone_shield_hand", BoneShieldItem::new);
+    public static DeferredItem<Item> CHILLING_AURA_NECKLACE = ITEMS.registerItem("chilling_aura_necklace", ChillingAuraItem::new);
+    public static DeferredItem<Item> ETERNAL_FEAST_BELT = ITEMS.registerItem("eternal_feast_belt", EternalFeastItem::new);
+    public static DeferredItem<Item> NIGHTMARISH_WINGS_BACK = ITEMS.registerItem("nightmarish_wings_back", NightmarishWingsItem::new);
+    public static DeferredItem<Item> SCORCHING_AURA_RING = ITEMS.registerItem("scorching_aura_ring", ScorchingAuraItem::new);
+    public static DeferredItem<Item> HELLISH_BARGAIN_RING = ITEMS.registerItem("hellish_bargain_ring", properties -> new TrinketItem(properties, Rarity.UNCOMMON, SalemRaidTier.RARE));
+    public static DeferredItem<Item> TOME_OF_THE_DAMNED_CHARM = ITEMS.registerItem("tome_of_the_damned_charm", TomeOfTheDamnedItem::new);
+    public static DeferredItem<Item> UNHALLOWED_CROSS = ITEMS.registerItem("unhallowed_cross_charm", UnhallowedCrossItem::new);
+    public static DeferredItem<Item> WITHERING_TOUCH_HAND = ITEMS.registerItem("withering_touch_hand", WitheringTouchItem::new);
+    public static DeferredItem<Item> COMMON_RAID_SUMMONER = ITEMS.registerItem("common_raid_summoner", properties -> new SummonerItem(properties, Rarity.COMMON, SalemRaidTier.COMMON));
+    public static DeferredItem<Item> RARE_RAID_SUMMONER = ITEMS.registerItem("rare_raid_summoner", properties -> new SummonerItem(properties, Rarity.UNCOMMON, SalemRaidTier.RARE));
+    public static DeferredItem<Item> EPIC_RAID_SUMMONER = ITEMS.registerItem("epic_raid_summoner", properties -> new SummonerItem(properties, Rarity.RARE, SalemRaidTier.EPIC));
+    public static DeferredItem<Item> LEGENDARY_RAID_SUMMONER = ITEMS.registerItem("legendary_raid_summoner", properties -> new SummonerItem(properties, Rarity.EPIC, SalemRaidTier.LEGENDARY));
 
     public static class DataComp{
 
@@ -55,7 +65,7 @@ public class SalemContent {
     public static class Effect {
 
         public static final DeferredRegister<MobEffect> EFFECT = DeferredRegister.create(Registries.MOB_EFFECT, Salem.MODID);
-        public static ResourceLocation ENLARGE_ATTRIBUTE = ResourceLocation.fromNamespaceAndPath(Salem.MODID, "enlarge");
+        public static Identifier ENLARGE_ATTRIBUTE = Identifier.fromNamespaceAndPath(Salem.MODID, "enlarge");
 
         public static DeferredHolder<MobEffect, MobEffect> ENLARGE_EFFECT = EFFECT.register("enlarge", () -> new SalemMobEffects(MobEffectCategory.BENEFICIAL, 3402751)
                 .addAttributeModifier(

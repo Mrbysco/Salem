@@ -18,7 +18,7 @@ public class ElytraLivingEntityMixin {
             method = "updateFallFlying",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/item/ItemStack;canElytraFly(Lnet/minecraft/world/entity/LivingEntity;)Z",
+                    target = "Lnet/minecraft/world/entity/LivingEntity;canGlide()Z",
                     remap = false
             )
     )
@@ -26,15 +26,15 @@ public class ElytraLivingEntityMixin {
         return original || !InventoryFinderUtil.findFirst((LivingEntity)(Object)this, SalemContent.NIGHTMARISH_WINGS_BACK.asItem()).isEmpty();
     }
 
-    @ModifyExpressionValue(
-            method = "updateFallFlying",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/world/item/ItemStack;elytraFlightTick(Lnet/minecraft/world/entity/LivingEntity;I)Z",
-                    remap = false
-            )
-    )
-    public boolean eytraValidOverride(boolean original) {
-        return  original || !InventoryFinderUtil.findFirst((LivingEntity)(Object)this, SalemContent.NIGHTMARISH_WINGS_BACK.asItem()).isEmpty();
-    }
+//    @ModifyExpressionValue(
+//            method = "updateFallFlying",
+//            at = @At(
+//                    value = "INVOKE",
+//                    target = "Lnet/minecraft/world/item/ItemStack;elytraFlightTick(Lnet/minecraft/world/entity/LivingEntity;I)Z",
+//                    remap = false
+//            )
+//    )
+//    public boolean eytraValidOverride(boolean original) {
+//        return  original || !InventoryFinderUtil.findFirst((LivingEntity)(Object)this, SalemContent.NIGHTMARISH_WINGS_BACK.asItem()).isEmpty();
+//    }
 }

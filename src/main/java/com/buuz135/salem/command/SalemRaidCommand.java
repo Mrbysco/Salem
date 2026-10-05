@@ -17,7 +17,8 @@ import net.minecraft.commands.arguments.coordinates.WorldCoordinates;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.RelativeMovement;
+import net.minecraft.world.entity.Relative;
+import net.minecraft.world.entity.Relative;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
@@ -29,15 +30,14 @@ import java.util.Set;
 public class SalemRaidCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> commandDispatcher) {
-        LiteralCommandNode<CommandSourceStack> literalCommandNode = commandDispatcher.register((LiteralArgumentBuilder) ((LiteralArgumentBuilder) ((LiteralArgumentBuilder) ((LiteralArgumentBuilder) Commands.literal("salemraid").requires((commandSourceStack) -> {
-                    return commandSourceStack.hasPermission(2);
-                })
+        LiteralCommandNode<CommandSourceStack> literalCommandNode = commandDispatcher.register(Commands.literal("salemraid")
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .then(Commands.argument("tier", StringArgumentType.word()).suggests((context, builder) -> SharedSuggestionProvider.suggest(Arrays.stream(SalemRaidTier.values()).map(tier -> tier.name()).toList(), builder))
                 .then(Commands.argument("location", Vec3Argument.vec3()).executes((commandContext) -> {
-                    return raidPos((CommandSourceStack) commandContext.getSource(), ((CommandSourceStack) commandContext.getSource()).getLevel(), Vec3Argument.getCoordinates(commandContext, "location"), WorldCoordinates.current(), SalemRaidTier.valueOf(StringArgumentType.getString(commandContext, "tier")));
+                    return raidPos((CommandSourceStack) commandContext.getSource(), ((CommandSourceStack) commandContext.getSource()).getLevel(), Vec3Argument.getCoordinates(commandContext, "location"), null, SalemRaidTier.valueOf(StringArgumentType.getString(commandContext, "tier")));
                 })).then(Commands.argument("destination", EntityArgument.entity()).executes((commandContext) -> {
                     return raidEntity((CommandSourceStack) commandContext.getSource(), EntityArgument.getEntity(commandContext, "destination"), SalemRaidTier.valueOf(StringArgumentType.getString(commandContext, "tier")));
-                }))))))
+                })))
         );
     }
 
@@ -51,29 +51,29 @@ public class SalemRaidCommand {
     private static int raidPos(CommandSourceStack commandSourceStack, ServerLevel serverLevel, Coordinates coordinates, @Nullable Coordinates coordinates2, SalemRaidTier tier) throws CommandSyntaxException {
         Vec3 vec3 = coordinates.getPosition(commandSourceStack);
         Vec2 vec2 = coordinates2 == null ? null : coordinates2.getRotation(commandSourceStack);
-        Set<RelativeMovement> set = EnumSet.noneOf(RelativeMovement.class);
+        Set<Relative> set = EnumSet.noneOf(Relative.class);
         if (coordinates.isXRelative()) {
-            set.add(RelativeMovement.X);
+            set.add(Relative.X);
         }
 
         if (coordinates.isYRelative()) {
-            set.add(RelativeMovement.Y);
+            set.add(Relative.Y);
         }
 
         if (coordinates.isZRelative()) {
-            set.add(RelativeMovement.Z);
+            set.add(Relative.Z);
         }
 
         if (coordinates2 == null) {
-            set.add(RelativeMovement.X_ROT);
-            set.add(RelativeMovement.Y_ROT);
+            set.add(Relative.X_ROT);
+            set.add(Relative.Y_ROT);
         } else {
             if (coordinates2.isXRelative()) {
-                set.add(RelativeMovement.X_ROT);
+                set.add(Relative.X_ROT);
             }
 
             if (coordinates2.isYRelative()) {
-                set.add(RelativeMovement.Y_ROT);
+                set.add(Relative.Y_ROT);
             }
         }
 
