@@ -17,7 +17,7 @@ public class SalemClient {
 	public static void registerCustomRenderData(RegisterRenderStateModifiersEvent event) {
 		event.registerEntityModifier(CatRenderer.class, (cat, renderState) -> {
 			var attribute = cat.getAttribute(Attributes.SCALE);
-			if (attribute.hasModifier(SalemContent.Effect.ENLARGE_ATTRIBUTE)){
+			if (attribute != null && attribute.hasModifier(SalemContent.Effect.ENLARGE_ATTRIBUTE)){
 				renderState.setRenderData(ENLARGED, true);
 			}
 		});

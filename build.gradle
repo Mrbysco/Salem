@@ -47,6 +47,10 @@ neoForge {
         server {
             server()
         }
+        data {
+            clientData()
+            programArguments.addAll '--mod', "${mod_id}", '--all', '--uncached', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        }
     }
 
     mods {
@@ -66,7 +70,6 @@ dependencies {
 
     compileOnly "mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}"
     runtimeOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
-    implementation "curse.maven:jei-238222:5846880"
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
